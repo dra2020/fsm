@@ -1,0 +1,37 @@
+{
+  "name": "@terrencecrowley/fsm",
+  "version": "1.0.2",
+  "description": "Library for managing execution of tree of finite state machines.",
+  "main": "dist/fsm.js",
+  "types": "./dist/all.d.ts",
+  "scripts": {
+    "test": "echo \"No test defined.\"",
+    "build": "webpack",
+    "webpack": "node_modules/.bin/webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terrencecrowley/fsm.git"
+  },
+  "keywords": [
+    "Typescript"
+  ],
+  "author": "Terry Crowley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/terrencecrowley/fsm/issues"
+  },
+  "homepage": "https://github.com/terrencecrowley/fsm#readme",
+  "devDependencies": {
+    "@types/node": "10.12.23",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^5.3.3",
+    "tsify": "^4.0.1",
+    "typescript": "^3.3.3",
+    "webpack": "^4.29.3",
+    "webpack-cli": "^3.2.3"
+  },
+  "dependencies": {
+    "@terrencecrowley/util": "^1.0.14"
+  }
+}
