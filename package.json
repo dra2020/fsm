@@ -1,6 +1,6 @@
 {
   "name": "@terrencecrowley/fsm",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Library for managing execution of tree of finite state machines.",
   "main": "dist/fsm.js",
   "types": "./dist/all.d.ts",
