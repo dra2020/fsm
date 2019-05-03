@@ -15,21 +15,29 @@ export declare const FSM_CUSTOM9: number;
 export declare type FsmIndex = {
     [key: number]: Fsm;
 };
+export declare class FsmManager {
+    theId: number;
+    theEpoch: number;
+    private bTickSet;
+    private theTickList;
+    private theBusyLoopCount;
+    constructor();
+    forceTick(fsm: Fsm): void;
+    private doTick;
+}
+export interface FsmEnvironment {
+    fsmManager: FsmManager;
+}
 export declare class Fsm {
     id: number;
-    typeName: string;
     state: number;
     epochDone: number;
-    _waitOn: FsmIndex;
-    _waitedOn: FsmIndex;
-    private static theId;
-    private static theEpoch;
-    private static bTickSet;
-    private static theTickList;
-    private static theBusyLoopCount;
-    static ForceTick(fsm: Fsm): void;
-    private static Tick;
-    constructor(typeName: string);
+    _env: FsmEnvironment;
+    private _waitOn;
+    private _waitedOn;
+    constructor(env: FsmEnvironment);
+    readonly env: FsmEnvironment;
+    readonly manager: FsmManager;
     readonly done: boolean;
     readonly ready: boolean;
     readonly iserror: boolean;
@@ -44,7 +52,7 @@ export declare class Fsm {
 export declare class FsmOnDone extends Fsm {
     cb: any;
     fsm: Fsm | Fsm[];
-    constructor(fsm: Fsm | Fsm[], cb: any);
+    constructor(env: FsmEnvironment, fsm: Fsm | Fsm[], cb: any);
     readonly isChildError: boolean;
     tick(): void;
 }
@@ -53,7 +61,7 @@ export declare type SerializerIndex = {
 };
 export declare class FsmSerializer extends Fsm {
     index: SerializerIndex;
-    constructor();
+    constructor(env: FsmEnvironment);
     serialize(id: string, fsm?: Fsm): Fsm;
     tick(): void;
 }
@@ -61,8 +69,9 @@ declare type FsmArrayMap = {
     [key: string]: Fsm[];
 };
 export declare class FsmTracker {
+    env: FsmEnvironment;
     map: FsmArrayMap;
-    constructor();
+    constructor(env: FsmEnvironment);
     _track(uid: string, fsm: Fsm): void;
     _untrack(uid: string, fsm: Fsm): void;
     track(uid: string, fsm: Fsm): Fsm;

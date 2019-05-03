@@ -141,7 +141,9 @@ exports.FSM_CUSTOM6 = 1 << 9;
 exports.FSM_CUSTOM7 = 1 << 10;
 exports.FSM_CUSTOM8 = 1 << 11;
 exports.FSM_CUSTOM9 = 1 << 12;
-function FsmDone(s) { return ((s & exports.FSM_DONE) != 0) || ((s & exports.FSM_ERROR) != 0) || ((s & exports.FSM_RELEASED) != 0); }
+function FsmDone(s) {
+    return ((s & exports.FSM_DONE) != 0) || ((s & exports.FSM_ERROR) != 0) || ((s & exports.FSM_RELEASED) != 0);
+}
 function FsmStateToString(state) {
     let a = [];
     if (state == exports.FSM_STARTING)
@@ -176,30 +178,29 @@ function FsmStateToString(state) {
         return a.join('|');
     }
 }
-class Fsm {
-    constructor(typeName) {
-        this.id = Fsm.theId++;
-        this.typeName = typeName;
-        this.state = exports.FSM_STARTING;
-        this.epochDone = -1;
-        this._waitOn = null;
-        this._waitedOn = null;
-        Fsm.ForceTick(this);
+class FsmManager {
+    constructor() {
+        this.theId = 0;
+        this.theEpoch = 0;
+        this.bTickSet = false;
+        this.theTickList = {};
+        this.theBusyLoopCount = 0;
+        this.doTick = this.doTick.bind(this);
     }
-    static ForceTick(fsm) {
-        Fsm.theTickList[fsm.id] = fsm;
-        if (!Fsm.bTickSet) {
-            Fsm.bTickSet = true;
-            setImmediate(Fsm.Tick);
+    forceTick(fsm) {
+        this.theTickList[fsm.id] = fsm;
+        if (!this.bTickSet) {
+            this.bTickSet = true;
+            setImmediate(this.doTick);
         }
     }
-    static Tick() {
-        Fsm.bTickSet = false;
+    doTick() {
+        this.bTickSet = false;
         let nLoops = 0;
-        while (nLoops < 1 && !Util.isEmpty(Fsm.theTickList)) {
+        while (nLoops < 1 && !Util.isEmpty(this.theTickList)) {
             nLoops++;
-            let thisTickList = Fsm.theTickList;
-            Fsm.theTickList = {};
+            let thisTickList = this.theTickList;
+            this.theTickList = {};
             for (let id in thisTickList)
                 if (thisTickList.hasOwnProperty(id)) {
                     let f = thisTickList[id];
@@ -207,12 +208,26 @@ class Fsm {
                     f.tick();
                 }
         }
-        if (Util.isEmpty(Fsm.theTickList))
-            Fsm.theBusyLoopCount = 0;
+        if (Util.isEmpty(this.theTickList))
+            this.theBusyLoopCount = 0;
         else
-            Fsm.theBusyLoopCount++;
-        Fsm.theEpoch++;
+            this.theBusyLoopCount++;
+        this.theEpoch++;
     }
+}
+exports.FsmManager = FsmManager;
+class Fsm {
+    constructor(env) {
+        this._env = env;
+        this.id = this.manager.theId++;
+        this.state = exports.FSM_STARTING;
+        this.epochDone = -1;
+        this._waitOn = null;
+        this._waitedOn = null;
+        this.manager.forceTick(this);
+    }
+    get env() { return this._env; }
+    get manager() { return this.env.fsmManager; }
     get done() {
         return FsmDone(this.state);
     }
@@ -227,7 +242,7 @@ class Fsm {
         return false;
     }
     get ticked() {
-        return this.done && Fsm.theEpoch > this.epochDone;
+        return this.done && this.manager.theEpoch > this.epochDone;
     }
     waitOn(fsm) {
         if (fsm == null)
@@ -241,7 +256,7 @@ class Fsm {
                 // If dependency is already done, don't add to waitOn list but ensure that
                 // this Fsm gets ticked during next epoch. This is because the dependent tick
                 // only happens when the dependency state is changed.
-                Fsm.ForceTick(this);
+                this.manager.forceTick(this);
             }
             else {
                 if (this._waitOn == null)
@@ -262,11 +277,11 @@ class Fsm {
                 this._waitedOn = null;
                 for (let id in on)
                     if (on.hasOwnProperty(id))
-                        Fsm.ForceTick(on[id]);
+                        this.manager.forceTick(on[id]);
             }
-            this.epochDone = Fsm.theEpoch;
+            this.epochDone = this.manager.theEpoch;
         }
-        Fsm.ForceTick(this);
+        this.manager.forceTick(this);
     }
     // Can override if need to do more here
     end() {
@@ -291,15 +306,10 @@ class Fsm {
     tick() {
     }
 }
-Fsm.theId = 0;
-Fsm.theEpoch = 0;
-Fsm.bTickSet = false;
-Fsm.theTickList = {};
-Fsm.theBusyLoopCount = 0;
 exports.Fsm = Fsm;
 class FsmOnDone extends Fsm {
-    constructor(fsm, cb) {
-        super('FsmOnDone');
+    constructor(env, fsm, cb) {
+        super(env);
         this.waitOn(fsm);
         this.fsm = fsm;
         this.cb = cb;
@@ -327,8 +337,8 @@ class FsmOnDone extends Fsm {
 }
 exports.FsmOnDone = FsmOnDone;
 class FsmSerializer extends Fsm {
-    constructor() {
-        super('FsmSerializer');
+    constructor(env) {
+        super(env);
         this.index = {};
     }
     serialize(id, fsm) {
@@ -359,8 +369,8 @@ exports.FsmSerializer = FsmSerializer;
 // complete.
 //
 class FsmTrackerWrap extends Fsm {
-    constructor(index, uid, fsm) {
-        super('FsmTrackerWrap');
+    constructor(env, index, uid, fsm) {
+        super(env);
         this.index = index;
         this.uid = uid;
         this.fsm = fsm;
@@ -375,7 +385,8 @@ class FsmTrackerWrap extends Fsm {
     }
 }
 class FsmTracker {
-    constructor() {
+    constructor(env) {
+        this.env = env;
         this.map = {};
     }
     _track(uid, fsm) {
@@ -400,7 +411,7 @@ class FsmTracker {
         }
     }
     track(uid, fsm) {
-        return new FsmTrackerWrap(this, uid, fsm);
+        return new FsmTrackerWrap(this.env, this, uid, fsm);
     }
     maybeWait(uid, fsm) {
         fsm.waitOn(this.map[uid]);

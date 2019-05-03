@@ -17,7 +17,11 @@ export const FSM_CUSTOM7: number  = 1<<10;
 export const FSM_CUSTOM8: number  = 1<<11;
 export const FSM_CUSTOM9: number  = 1<<12;
 
-function FsmDone(s: number): boolean { return ((s & FSM_DONE) != 0) || ((s & FSM_ERROR) != 0) || ((s & FSM_RELEASED) != 0); }
+function FsmDone(s: number): boolean
+{
+  return ((s & FSM_DONE) != 0) || ((s & FSM_ERROR) != 0) || ((s & FSM_RELEASED) != 0);
+}
+
 function FsmStateToString(state: number): string
 {
   let a: string[] = [];
@@ -45,41 +49,44 @@ function FsmStateToString(state: number): string
 
 export type FsmIndex = { [key: number]: Fsm };
 
-export class Fsm
+export class FsmManager
 {
-  id: number;
-  typeName: string;
-  state: number;
-  epochDone: number;
-  _waitOn: FsmIndex;
-  _waitedOn: FsmIndex;
+  theId: number;
+  theEpoch: number;
+  private bTickSet: boolean;
+  private theTickList: FsmIndex;
+  private theBusyLoopCount: number;
 
-  private static theId: number = 0;
-  private static theEpoch: number = 0;
-  private static bTickSet: boolean = false;
-  private static theTickList: FsmIndex = {};
-  private static theBusyLoopCount: number = 0;
+  constructor()
+  {
+    this.theId = 0;
+    this.theEpoch = 0;
+    this.bTickSet = false;
+    this.theTickList = {};
+    this.theBusyLoopCount = 0;
+    this.doTick = this.doTick.bind(this);
+  }
 
-  static ForceTick(fsm: Fsm): void
+  forceTick(fsm: Fsm): void
+  {
+    this.theTickList[fsm.id] = fsm;
+    if (! this.bTickSet)
     {
-      Fsm.theTickList[fsm.id] = fsm;
-      if (! Fsm.bTickSet)
-      {
-        Fsm.bTickSet = true;
-        setImmediate(Fsm.Tick);
-      }
+      this.bTickSet = true;
+      setImmediate(this.doTick);
     }
+  }
 
-  private static Tick(): void
+  private doTick(): void
     {
-      Fsm.bTickSet = false;
+      this.bTickSet = false;
       let nLoops: number = 0;
 
-      while (nLoops < 1 && !Util.isEmpty(Fsm.theTickList))
+      while (nLoops < 1 && !Util.isEmpty(this.theTickList))
       {
         nLoops++;
-        let thisTickList = Fsm.theTickList;
-        Fsm.theTickList = {};
+        let thisTickList = this.theTickList;
+        this.theTickList = {};
 
         for (let id in thisTickList) if (thisTickList.hasOwnProperty(id))
         {
@@ -89,24 +96,43 @@ export class Fsm
         }
       }
 
-      if (Util.isEmpty(Fsm.theTickList))
-        Fsm.theBusyLoopCount = 0;
+      if (Util.isEmpty(this.theTickList))
+        this.theBusyLoopCount = 0;
       else
-        Fsm.theBusyLoopCount++;
+        this.theBusyLoopCount++;
 
-      Fsm.theEpoch++;
+      this.theEpoch++;
     }
 
-  constructor(typeName: string)
+}
+
+export interface FsmEnvironment
+{
+  fsmManager: FsmManager;
+}
+
+export class Fsm
+{
+  id: number;
+  state: number;
+  epochDone: number;
+  _env: FsmEnvironment;
+  private _waitOn: FsmIndex;
+  private _waitedOn: FsmIndex;
+
+  constructor(env: FsmEnvironment)
     {
-      this.id = Fsm.theId++;
-      this.typeName = typeName;
+      this._env = env;
+      this.id = this.manager.theId++;
       this.state = FSM_STARTING;
       this.epochDone = -1;
       this._waitOn = null;
       this._waitedOn = null;
-      Fsm.ForceTick(this);
+      this.manager.forceTick(this);
     }
+
+  get env(): FsmEnvironment { return this._env; }
+  get manager(): FsmManager { return this.env.fsmManager; }
 
   get done(): boolean
     {
@@ -131,7 +157,7 @@ export class Fsm
 
   get ticked(): boolean
     {
-      return this.done && Fsm.theEpoch > this.epochDone;
+      return this.done && this.manager.theEpoch > this.epochDone;
     }
 
   waitOn(fsm: Fsm | Fsm[]): Fsm
@@ -150,7 +176,7 @@ export class Fsm
           // If dependency is already done, don't add to waitOn list but ensure that
           // this Fsm gets ticked during next epoch. This is because the dependent tick
           // only happens when the dependency state is changed.
-          Fsm.ForceTick(this);
+          this.manager.forceTick(this);
         }
         else
         {
@@ -173,12 +199,12 @@ export class Fsm
           let on = this._waitedOn;
           this._waitedOn = null;
           for (let id in on) if (on.hasOwnProperty(id))
-            Fsm.ForceTick(on[id]);
+            this.manager.forceTick(on[id]);
         }
 
-        this.epochDone = Fsm.theEpoch;
+        this.epochDone = this.manager.theEpoch;
       }
-      Fsm.ForceTick(this);
+      this.manager.forceTick(this);
     }
 
   // Can override if need to do more here
@@ -213,9 +239,9 @@ export class FsmOnDone extends Fsm
   cb: any;
   fsm: Fsm | Fsm[];
 
-  constructor(fsm: Fsm | Fsm[], cb: any)
+  constructor(env: FsmEnvironment, fsm: Fsm | Fsm[], cb: any)
     {
-      super('FsmOnDone');
+      super(env);
       this.waitOn(fsm);
       this.fsm = fsm;
       this.cb = cb;
@@ -256,9 +282,9 @@ export class FsmSerializer extends Fsm
 {
   index: SerializerIndex;
 
-  constructor()
+  constructor(env: FsmEnvironment)
     {
-      super('FsmSerializer');
+      super(env);
       this.index = {};
     }
 
@@ -300,9 +326,9 @@ class FsmTrackerWrap extends Fsm
   uid: string;
   fsm: Fsm;
 
-  constructor(index: FsmTracker, uid: string, fsm: Fsm)
+  constructor(env: FsmEnvironment, index: FsmTracker, uid: string, fsm: Fsm)
     {
-      super('FsmTrackerWrap');
+      super(env);
       this.index = index;
       this.uid = uid;
       this.fsm = fsm;
@@ -324,10 +350,12 @@ type FsmArrayMap = { [key: string]: Fsm[] };
 
 export class FsmTracker
 {
+  env: FsmEnvironment;
   map: FsmArrayMap;
 
-  constructor()
+  constructor(env: FsmEnvironment)
     {
+      this.env = env;
       this.map = {};
     }
 
@@ -361,7 +389,7 @@ export class FsmTracker
 
   track(uid: string, fsm: Fsm): Fsm
     {
-      return new FsmTrackerWrap(this, uid, fsm);
+      return new FsmTrackerWrap(this.env, this, uid, fsm);
     }
 
   maybeWait(uid: string, fsm: Fsm): void
