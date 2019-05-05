@@ -1,6 +1,6 @@
 {
   "name": "@terrencecrowley/fsm",
-  "version": "1.0.6",
+  "version": "1.0.10",
   "description": "Library for managing execution of tree of finite state machines.",
   "main": "dist/fsm.js",
   "types": "./dist/all.d.ts",
@@ -32,6 +32,6 @@
     "webpack-cli": "^3.2.3"
   },
   "dependencies": {
-    "@terrencecrowley/util": "^1.0.14"
+    "@terrencecrowley/util": "^1.0.15"
   }
 }

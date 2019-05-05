@@ -18,12 +18,12 @@ export declare type FsmIndex = {
 export declare class FsmManager {
     theId: number;
     theEpoch: number;
-    private bTickSet;
-    private theTickList;
-    private theBusyLoopCount;
+    bTickSet: boolean;
+    theTickList: FsmIndex;
+    theBusyLoopCount: number;
     constructor();
     forceTick(fsm: Fsm): void;
-    private doTick;
+    doTick(): void;
 }
 export interface FsmEnvironment {
     fsmManager: FsmManager;
@@ -33,8 +33,8 @@ export declare class Fsm {
     state: number;
     epochDone: number;
     _env: FsmEnvironment;
-    private _waitOn;
-    private _waitedOn;
+    _waitOn: FsmIndex;
+    _waitedOn: FsmIndex;
     constructor(env: FsmEnvironment);
     readonly env: FsmEnvironment;
     readonly manager: FsmManager;

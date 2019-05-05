@@ -53,9 +53,9 @@ export class FsmManager
 {
   theId: number;
   theEpoch: number;
-  private bTickSet: boolean;
-  private theTickList: FsmIndex;
-  private theBusyLoopCount: number;
+  bTickSet: boolean;
+  theTickList: FsmIndex;
+  theBusyLoopCount: number;
 
   constructor()
   {
@@ -77,7 +77,7 @@ export class FsmManager
     }
   }
 
-  private doTick(): void
+  doTick(): void
     {
       this.bTickSet = false;
       let nLoops: number = 0;
@@ -117,8 +117,8 @@ export class Fsm
   state: number;
   epochDone: number;
   _env: FsmEnvironment;
-  private _waitOn: FsmIndex;
-  private _waitedOn: FsmIndex;
+  _waitOn: FsmIndex;
+  _waitedOn: FsmIndex;
 
   constructor(env: FsmEnvironment)
     {
