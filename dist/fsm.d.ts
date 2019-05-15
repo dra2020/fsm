@@ -31,6 +31,7 @@ export interface FsmEnvironment {
 export declare class Fsm {
     id: number;
     state: number;
+    dependentError: boolean;
     epochDone: number;
     _env: FsmEnvironment;
     _waitOn: FsmIndex;
@@ -41,7 +42,9 @@ export declare class Fsm {
     readonly done: boolean;
     readonly ready: boolean;
     readonly iserror: boolean;
-    readonly isChildError: boolean;
+    readonly isDependentError: boolean;
+    setDependentError(): void;
+    clearDependentError(): void;
     readonly ticked: boolean;
     waitOn(fsm: Fsm | Fsm[]): Fsm;
     setState(state: number): void;
@@ -53,7 +56,6 @@ export declare class FsmOnDone extends Fsm {
     cb: any;
     fsm: Fsm | Fsm[];
     constructor(env: FsmEnvironment, fsm: Fsm | Fsm[], cb: any);
-    readonly isChildError: boolean;
     tick(): void;
 }
 export declare type SerializerIndex = {

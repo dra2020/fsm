@@ -221,6 +221,7 @@ class Fsm {
         this._env = env;
         this.id = this.manager.theId++;
         this.state = exports.FSM_STARTING;
+        this.dependentError = false;
         this.epochDone = -1;
         this._waitOn = null;
         this._waitedOn = null;
@@ -237,9 +238,14 @@ class Fsm {
     get iserror() {
         return (this.state & exports.FSM_ERROR) != 0;
     }
-    // Override
-    get isChildError() {
-        return false;
+    get isDependentError() {
+        return this.dependentError;
+    }
+    setDependentError() {
+        this.dependentError = true;
+    }
+    clearDependentError() {
+        this.dependentError = false;
     }
     get ticked() {
         return this.done && this.manager.theEpoch > this.epochDone;
@@ -257,6 +263,8 @@ class Fsm {
                 // this Fsm gets ticked during next epoch. This is because the dependent tick
                 // only happens when the dependency state is changed.
                 this.manager.forceTick(this);
+                if (fsm.iserror)
+                    this.setDependentError();
             }
             else {
                 if (this._waitOn == null)
@@ -276,8 +284,12 @@ class Fsm {
                 let on = this._waitedOn;
                 this._waitedOn = null;
                 for (let id in on)
-                    if (on.hasOwnProperty(id))
-                        this.manager.forceTick(on[id]);
+                    if (on.hasOwnProperty(id)) {
+                        let f = on[id];
+                        if (this.iserror)
+                            f.setDependentError();
+                        this.manager.forceTick(f);
+                    }
             }
             this.epochDone = this.manager.theEpoch;
         }
@@ -307,6 +319,7 @@ class Fsm {
     }
 }
 exports.Fsm = Fsm;
+// Launches callback provided when the associated Fsm (or Fsm array) completes.
 class FsmOnDone extends Fsm {
     constructor(env, fsm, cb) {
         super(env);
@@ -314,23 +327,9 @@ class FsmOnDone extends Fsm {
         this.fsm = fsm;
         this.cb = cb;
     }
-    get isChildError() {
-        if (this.fsm) {
-            if (Array.isArray(this.fsm)) {
-                for (let i = 0; i < this.fsm.length; i++)
-                    if (this.fsm[i].iserror)
-                        return true;
-                return false;
-            }
-            else
-                return this.fsm.iserror;
-        }
-        else
-            return false;
-    }
     tick() {
         if (this.ready && this.state == exports.FSM_STARTING) {
-            this.setState(this.isChildError ? exports.FSM_ERROR : exports.FSM_DONE);
+            this.setState(this.isDependentError ? exports.FSM_ERROR : exports.FSM_DONE);
             this.cb(this.fsm);
         }
     }

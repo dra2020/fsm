@@ -115,6 +115,7 @@ export class Fsm
 {
   id: number;
   state: number;
+  dependentError: boolean;
   epochDone: number;
   _env: FsmEnvironment;
   _waitOn: FsmIndex;
@@ -125,6 +126,7 @@ export class Fsm
       this._env = env;
       this.id = this.manager.theId++;
       this.state = FSM_STARTING;
+      this.dependentError = false;
       this.epochDone = -1;
       this._waitOn = null;
       this._waitedOn = null;
@@ -149,10 +151,19 @@ export class Fsm
       return (this.state & FSM_ERROR) != 0;
     }
 
-  // Override
-  get isChildError(): boolean
+  get isDependentError(): boolean
     {
-      return false;
+      return this.dependentError;
+    }
+
+  setDependentError(): void
+    {
+      this.dependentError = true;
+    }
+
+  clearDependentError(): void
+    {
+      this.dependentError = false;
     }
 
   get ticked(): boolean
@@ -177,6 +188,8 @@ export class Fsm
           // this Fsm gets ticked during next epoch. This is because the dependent tick
           // only happens when the dependency state is changed.
           this.manager.forceTick(this);
+          if (fsm.iserror)
+            this.setDependentError();
         }
         else
         {
@@ -199,7 +212,11 @@ export class Fsm
           let on = this._waitedOn;
           this._waitedOn = null;
           for (let id in on) if (on.hasOwnProperty(id))
-            this.manager.forceTick(on[id]);
+          {
+            let f = on[id];
+            if (this.iserror) f.setDependentError();
+            this.manager.forceTick(f);
+          }
         }
 
         this.epochDone = this.manager.theEpoch;
@@ -234,6 +251,7 @@ export class Fsm
     }
 }
 
+// Launches callback provided when the associated Fsm (or Fsm array) completes.
 export class FsmOnDone extends Fsm
 {
   cb: any;
@@ -247,29 +265,11 @@ export class FsmOnDone extends Fsm
       this.cb = cb;
     }
 
-  get isChildError(): boolean
-    {
-      if (this.fsm)
-      {
-        if (Array.isArray(this.fsm))
-        {
-          for (let i: number = 0; i < this.fsm.length; i++)
-            if (this.fsm[i].iserror)
-              return true;
-          return false;
-        }
-        else
-          return this.fsm.iserror;
-      }
-      else
-        return false;
-    }
-
   tick(): void
     {
       if (this.ready && this.state == FSM_STARTING)
       {
-        this.setState(this.isChildError ? FSM_ERROR : FSM_DONE);
+        this.setState(this.isDependentError ? FSM_ERROR : FSM_DONE);
         this.cb(this.fsm);
       }
     }
@@ -311,7 +311,6 @@ export class FsmSerializer extends Fsm
       }
     }
 }
-
 
 // The FsmTracker class provides a mechanism for serializing a set of finite state
 // machines identified by a consistent unique identifier. A finite state machine is
