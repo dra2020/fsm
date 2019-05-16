@@ -34,6 +34,9 @@ tick(): void
 }
 ```
 
+Of course, a state machine might go from `ready` to not `ready` as many times as necessary simply by waiting on
+some new `Fsm`.
+
 Normally a Fsm-based class does not fire off any activity until the first time its `tick` function is called (rather than
 in the constructor).
 
@@ -52,7 +55,7 @@ tick(): void
   {
     switch (this.state)
     {
-      case FSM.FSM_STARTING:
+      case FSM_STARTING:
         // Kick off activity here
         break;
     }
@@ -68,8 +71,11 @@ be used internally to a state machine to manage walking through different active
 For convenenience, the names `FSM_CUSTOM1` through `FSM_CUSTOM9` are predefined and internal states can use these
 values (typically renamed to something semantically meaningful) however they wish.
 
-Callbacks can be integrated easily by having the callback set the state, which allows either completion
-notification or the next step in the state machine to be executed.
+The state `FSM_PENDING` has no special meaning but is defined for convenience since many state machines go through
+a single intermediate state (`FSM_STARTING` to `FSM_PENDING` to `FSM_DONE`).
+
+Callbacks can be integrated easily by having the callback set the `Fsm` state, which allows either completion
+notification to any other waiting state machines or the next step in the current state machine to be executed.
 
 ```javascript
 tick(): void
@@ -78,12 +84,12 @@ tick(): void
   {
     switch (this.state)
     {
-      case FSM.FSM_STARTING:
+      case FSM_STARTING:
         asyncAPIWithCallback((err: any, result: any) => {
             if (err)
-              this.setState(FSM.FSM_ERROR);
+              this.setState(FSM_ERROR);
             else
-              this.setState(FSM.FSM_DONE);
+              this.setState(FSM_DONE);
           });
         break;
     }
@@ -91,10 +97,37 @@ tick(): void
 }
 ```
 
+or
+
+```javascript
+tick(): void
+{
+  if (this.ready)
+  {
+    switch (this.state)
+    {
+      case FSM_STARTING:
+        asyncAPIWithCallback((err: any, result: any) => {
+            if (err)
+              this.setState(FSM_ERROR);
+            else
+              this.setState(FSM_PENDING);
+          });
+        break;
+
+      case FSM_PENDING:
+        // Do more stuff here now that callback has completed.
+        break;
+    }
+  }
+}
+```
+
+
 ### isDependentError
 
 When an `Fsm` that is being waited on completes with an error, any waiting `Fsm`'s get the `isDependentError` flag set
-and of course get a chance to run their `tick` function.
+and of course get a chance to run their `tick` function (since the dependent `Fsm` has completed).
 
 They can decide if the semantics of the relationship then requires them to propagate, consume or otherwise handle the
 error. No other error propagation happens automatically.
@@ -104,7 +137,7 @@ So:
 tick(): void
 {
   if (this.isDependentError)
-    this.setState(FSM.FSM_ERROR);
+    this.setState(FSM_ERROR);
   else if (this.ready)
   {
     // Normal code here
@@ -126,7 +159,9 @@ will launch the callback with the provided fsm as an argument.
 
 
 ```javascript
-let fsm = new FsmOnDone(env, fsmWait, (fsmWait: Fsm) => { /* do stuff with fsmWait since it is now complete */ });
+let fsm = new FsmOnDone(env, fsmWait, (fsmWait: Fsm) => {
+    /* do stuff with fsmWait since it is now complete */
+  });
 ```
 
 ## Comparison with Promises
