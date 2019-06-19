@@ -164,4 +164,12 @@ let fsm = new FsmOnDone(env, fsmWait, (fsmWait: Fsm) => {
   });
 ```
 
+### FsmSleep
+
+A simple utility class that creates a dependency that is marked done after the number of milliseconds passed to the constructor.
+
+```javascript
+this.waitOn(new FsmSleep(env, 1000));
+```
+
 ## Comparison with Promises

@@ -275,6 +275,25 @@ export class FsmOnDone extends Fsm
     }
 }
 
+export class FsmSleep extends Fsm
+{
+  delay: number;
+
+  constructor(env: FsmEnvironment, delay: number)
+    {
+      super(env);
+      this.delay = delay;
+    }
+
+  tick(): void
+    {
+      if (this.ready && this.state === FSM_STARTING)
+      {
+        this.setState(FSM_PENDING);
+        setTimeout(() => { this.setState(FSM_DONE); }, this.delay);
+      }
+    }
+}
 
 export type SerializerIndex = { [key: string]: Fsm };
 

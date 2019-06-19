@@ -335,6 +335,19 @@ class FsmOnDone extends Fsm {
     }
 }
 exports.FsmOnDone = FsmOnDone;
+class FsmSleep extends Fsm {
+    constructor(env, delay) {
+        super(env);
+        this.delay = delay;
+    }
+    tick() {
+        if (this.ready && this.state === exports.FSM_STARTING) {
+            this.setState(exports.FSM_PENDING);
+            setTimeout(() => { this.setState(exports.FSM_DONE); }, this.delay);
+        }
+    }
+}
+exports.FsmSleep = FsmSleep;
 class FsmSerializer extends Fsm {
     constructor(env) {
         super(env);

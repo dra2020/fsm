@@ -58,6 +58,11 @@ export declare class FsmOnDone extends Fsm {
     constructor(env: FsmEnvironment, fsm: Fsm | Fsm[], cb: any);
     tick(): void;
 }
+export declare class FsmSleep extends Fsm {
+    delay: number;
+    constructor(env: FsmEnvironment, delay: number);
+    tick(): void;
+}
 export declare type SerializerIndex = {
     [key: string]: Fsm;
 };
