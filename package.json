@@ -1,5 +1,5 @@
 {
-  "name": "@terrencecrowley/fsm",
+  "name": "@dra2020/fsm",
   "version": "1.0.12",
   "description": "Library for managing execution of tree of finite state machines.",
   "main": "dist/fsm.js",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/terrencecrowley/fsm.git"
+    "url": "git+https://github.com/dra2020/fsm.git"
   },
   "keywords": [
     "Typescript"
@@ -19,9 +19,9 @@
   "author": "Terry Crowley",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/terrencecrowley/fsm/issues"
+    "url": "https://github.com/dra2020/fsm/issues"
   },
-  "homepage": "https://github.com/terrencecrowley/fsm#readme",
+  "homepage": "https://github.com/dra2020/fsm#readme",
   "devDependencies": {
     "@types/node": "10.12.23",
     "source-map-loader": "^0.2.4",
@@ -32,6 +32,6 @@
     "webpack-cli": "^3.2.3"
   },
   "dependencies": {
-    "@terrencecrowley/util": "^1.0.15"
+    "@dra2020/util": "^1.0.15"
   }
 }
