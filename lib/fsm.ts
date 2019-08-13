@@ -1,5 +1,5 @@
 // Shared libraries
-import * as Util from '@terrencecrowley/util';
+import * as Util from '@dra2020/util';
 
 // States
 export const FSM_STARTING: number = 0;
