@@ -48,7 +48,7 @@ export declare class Fsm {
     readonly ticked: boolean;
     waitOn(fsm: Fsm | Fsm[]): Fsm;
     setState(state: number): void;
-    end(): void;
+    end(state?: number): void;
     preTick(): void;
     tick(): void;
 }

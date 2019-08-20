@@ -296,8 +296,8 @@ class Fsm {
         this.manager.forceTick(this);
     }
     // Can override if need to do more here
-    end() {
-        this.setState(exports.FSM_DONE);
+    end(state = exports.FSM_DONE) {
+        this.setState(state);
     }
     // Cleans up _waitOn
     preTick() {

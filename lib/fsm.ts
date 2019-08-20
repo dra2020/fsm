@@ -225,9 +225,9 @@ export class Fsm
     }
 
   // Can override if need to do more here
-  end(): void
+  end(state: number = FSM_DONE): void
     {
-      this.setState(FSM_DONE);
+      this.setState(state);
     }
 
   // Cleans up _waitOn
