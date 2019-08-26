@@ -1,6 +1,6 @@
 {
   "name": "@dra2020/fsm",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "Library for managing execution of tree of finite state machines.",
   "main": "dist/fsm.js",
   "types": "./dist/all.d.ts",
@@ -23,15 +23,15 @@
   },
   "homepage": "https://github.com/dra2020/fsm#readme",
   "devDependencies": {
-    "@types/node": "10.12.23",
+    "@types/node": "12.7.2",
     "source-map-loader": "^0.2.4",
-    "ts-loader": "^5.3.3",
+    "ts-loader": "^6.0.4",
     "tsify": "^4.0.1",
-    "typescript": "^3.3.3",
-    "webpack": "^4.29.3",
-    "webpack-cli": "^3.2.3"
+    "typescript": "^3.5.3",
+    "webpack": "^4.39.2",
+    "webpack-cli": "^3.3.7"
   },
   "dependencies": {
-    "@dra2020/util": "^1.0.15"
+    "@dra2020/util": "^1.0.27"
   }
 }
