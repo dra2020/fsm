@@ -415,3 +415,66 @@ export class FsmTracker
       fsm.waitOn(this.map[uid]);
     }
 }
+
+
+// FsmLoop: repeat the Fsm passed in (resetting to STARTING state after finished) at some minimum interval.
+//  Assumes that the Fsm can be correctly reset and restarted by setting the state.
+//
+
+export interface LoopOptions
+{
+  minRepeatInterval?: number;
+  exitOnError?: boolean;
+}
+
+export const DefaultLoopOptions = { minRepeatInterval: 0, exitOnError: true };
+
+const FSM_DELAYING = FSM_CUSTOM1;
+
+export class FsmLoop extends Fsm
+{
+  fsm: Fsm;
+  options: LoopOptions;
+  elapsed: Util.Elapsed;
+
+  constructor(env: FsmEnvironment, fsm: Fsm, options?: LoopOptions)
+  {
+    super(env);
+    this.fsm = fsm;
+    this.elapsed = new Util.Elapsed();
+    this.options = Util.shallowAssignImmutable(DefaultLoopOptions, options);
+    this.waitOn(fsm);
+  }
+
+  tick(): void
+  {
+    if (this.ready && this.isDependentError)
+    {
+      if (this.options.exitOnError)
+        this.setState(FSM_ERROR);
+      else
+        this.clearDependentError();
+        // Fall through
+    }
+
+    if (this.ready)
+    {
+      switch (this.state)
+      {
+        case FSM_STARTING:
+          let msLeft = this.options.minRepeatInterval - this.elapsed.ms();
+          if (msLeft > 0)
+            this.waitOn(new FsmSleep(this.env, msLeft));
+          this.setState(FSM_DELAYING);
+          break;
+
+        case FSM_DELAYING:
+          this.elapsed.start();
+          this.fsm.setState(FSM_STARTING);
+          this.waitOn(this.fsm);
+          this.setState(FSM_STARTING);
+          break;
+      }
+    }
+  }
+}

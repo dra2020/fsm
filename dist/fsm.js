@@ -430,6 +430,43 @@ class FsmTracker {
     }
 }
 exports.FsmTracker = FsmTracker;
+exports.DefaultLoopOptions = { minRepeatInterval: 0, exitOnError: true };
+const FSM_DELAYING = exports.FSM_CUSTOM1;
+class FsmLoop extends Fsm {
+    constructor(env, fsm, options) {
+        super(env);
+        this.fsm = fsm;
+        this.elapsed = new Util.Elapsed();
+        this.options = Util.shallowAssignImmutable(exports.DefaultLoopOptions, options);
+        this.waitOn(fsm);
+    }
+    tick() {
+        if (this.ready && this.isDependentError) {
+            if (this.options.exitOnError)
+                this.setState(exports.FSM_ERROR);
+            else
+                this.clearDependentError();
+            // Fall through
+        }
+        if (this.ready) {
+            switch (this.state) {
+                case exports.FSM_STARTING:
+                    let msLeft = this.options.minRepeatInterval - this.elapsed.ms();
+                    if (msLeft > 0)
+                        this.waitOn(new FsmSleep(this.env, msLeft));
+                    this.setState(FSM_DELAYING);
+                    break;
+                case FSM_DELAYING:
+                    this.elapsed.start();
+                    this.fsm.setState(exports.FSM_STARTING);
+                    this.waitOn(this.fsm);
+                    this.setState(exports.FSM_STARTING);
+                    break;
+            }
+        }
+    }
+}
+exports.FsmLoop = FsmLoop;
 
 
 /***/ }),

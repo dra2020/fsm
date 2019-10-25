@@ -1,3 +1,4 @@
+import * as Util from '@dra2020/util';
 export declare const FSM_STARTING: number;
 export declare const FSM_PENDING: number;
 export declare const FSM_DONE: number;
@@ -83,5 +84,20 @@ export declare class FsmTracker {
     _untrack(uid: string, fsm: Fsm): void;
     track(uid: string, fsm: Fsm): Fsm;
     maybeWait(uid: string, fsm: Fsm): void;
+}
+export interface LoopOptions {
+    minRepeatInterval?: number;
+    exitOnError?: boolean;
+}
+export declare const DefaultLoopOptions: {
+    minRepeatInterval: number;
+    exitOnError: boolean;
+};
+export declare class FsmLoop extends Fsm {
+    fsm: Fsm;
+    options: LoopOptions;
+    elapsed: Util.Elapsed;
+    constructor(env: FsmEnvironment, fsm: Fsm, options?: LoopOptions);
+    tick(): void;
 }
 export {};
