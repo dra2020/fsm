@@ -225,3 +225,10 @@ fsm.waitOn(new FsmSleep(env, 1000));
 ```
 
 will result in the object `fsm` having a dependency that will complete in 1000ms.
+
+### FsmLoop
+
+`FsmLoop` is a simple utility class to run an asynchronous process in a loop at some maximum rate.
+It waits for the `Fsm` passed in to complete, then uses `FsmSleep` to wait until the specified
+minimum interval is complete (starting when the `Fsm` started executing)and restarts the `Fsm`.
+It is required that the `Fsm` properly handles going from the `FSM_DONE` state back to `FSM_STARTING`.
