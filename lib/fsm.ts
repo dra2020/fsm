@@ -171,6 +171,16 @@ export class Fsm
       return this.done && this.manager.theEpoch > this.epochDone;
     }
 
+  get nWaitOn(): number
+    {
+      return Util.countKeys(this._waitOn);
+    }
+
+  get nWaitedOn(): number
+    {
+      return Util.countKeys(this._waitedOn);
+    }
+
   waitOn(fsm: Fsm | Fsm[]): Fsm
     {
       if (fsm == null)

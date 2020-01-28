@@ -47,6 +47,8 @@ export declare class Fsm {
     setDependentError(): void;
     clearDependentError(): void;
     readonly ticked: boolean;
+    readonly nWaitOn: number;
+    readonly nWaitedOn: number;
     waitOn(fsm: Fsm | Fsm[]): Fsm;
     setState(state: number): void;
     end(state?: number): void;

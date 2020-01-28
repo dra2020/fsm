@@ -250,6 +250,12 @@ class Fsm {
     get ticked() {
         return this.done && this.manager.theEpoch > this.epochDone;
     }
+    get nWaitOn() {
+        return Util.countKeys(this._waitOn);
+    }
+    get nWaitedOn() {
+        return Util.countKeys(this._waitedOn);
+    }
     waitOn(fsm) {
         if (fsm == null)
             return this;
