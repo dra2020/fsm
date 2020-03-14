@@ -488,3 +488,59 @@ export class FsmLoop extends Fsm
     }
   }
 }
+
+export interface ISet
+{
+  test: (o: any) => boolean;
+  reset: () => void;
+}
+
+export class FsmArray extends Fsm
+{
+  a: any[];
+  iset: ISet;
+
+  constructor(env: FsmEnvironment, iset?: ISet)
+  {
+    super(env);
+    this.iset = iset;
+    this.a = [];
+  }
+
+  push(o: any): void
+  {
+    if (this.iset == null || !this.iset.test(o))
+    {
+      if (! this.done) this.setState(FSM_DONE);
+      this.a.push(o);
+    }
+  }
+
+  concat(a: any[]): void
+  {
+    if (a)
+    {
+      for (let i: number = 0; i < a.length; i++)
+        this.push(a[i]);
+    }
+  }
+
+  splice(i?: number, n?: number): void
+  {
+    if (i === undefined)
+      this.reset();
+    else
+    {
+      this.a.splice(i, n);
+      if (this.a.length == 0)
+        this.reset();
+    }
+  }
+
+  reset(): void
+  {
+    this.a = [];
+    if (this.iset) this.iset.reset();
+    this.setState(FSM_STARTING);
+  }
+}

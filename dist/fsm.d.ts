@@ -102,4 +102,17 @@ export declare class FsmLoop extends Fsm {
     constructor(env: FsmEnvironment, fsm: Fsm, options?: LoopOptions);
     tick(): void;
 }
+export interface ISet {
+    test: (o: any) => boolean;
+    reset: () => void;
+}
+export declare class FsmArray extends Fsm {
+    a: any[];
+    iset: ISet;
+    constructor(env: FsmEnvironment, iset?: ISet);
+    push(o: any): void;
+    concat(a: any[]): void;
+    splice(i?: number, n?: number): void;
+    reset(): void;
+}
 export {};

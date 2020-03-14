@@ -232,3 +232,12 @@ will result in the object `fsm` having a dependency that will complete in 1000ms
 It waits for the `Fsm` passed in to complete, then uses `FsmSleep` to wait until the specified
 minimum interval is complete (starting when the `Fsm` started executing)and restarts the `Fsm`.
 It is required that the `Fsm` properly handles going from the `FSM_DONE` state back to `FSM_STARTING`.
+
+### FsmArray
+
+`FsmArray` is a simple utility class that provides a mechanism for waiting for a stream of
+objects to appear in an array and consuming them, repeatedly.
+It will be marked `done` when any content is made available in the array (through the member `a`)
+by calling `push` or `concat`.
+When the content is consumed, it should be removed with `splice` or `reset`.
+At this point, the `Fsm` will be placed back in the `starting` state and can be waited on again.

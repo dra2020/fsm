@@ -473,6 +473,42 @@ class FsmLoop extends Fsm {
     }
 }
 exports.FsmLoop = FsmLoop;
+class FsmArray extends Fsm {
+    constructor(env, iset) {
+        super(env);
+        this.iset = iset;
+        this.a = [];
+    }
+    push(o) {
+        if (this.iset == null || !this.iset.test(o)) {
+            if (!this.done)
+                this.setState(exports.FSM_DONE);
+            this.a.push(o);
+        }
+    }
+    concat(a) {
+        if (a) {
+            for (let i = 0; i < a.length; i++)
+                this.push(a[i]);
+        }
+    }
+    splice(i, n) {
+        if (i === undefined)
+            this.reset();
+        else {
+            this.a.splice(i, n);
+            if (this.a.length == 0)
+                this.reset();
+        }
+    }
+    reset() {
+        this.a = [];
+        if (this.iset)
+            this.iset.reset();
+        this.setState(exports.FSM_STARTING);
+    }
+}
+exports.FsmArray = FsmArray;
 
 
 /***/ }),
