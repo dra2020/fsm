@@ -1,6 +1,6 @@
 {
   "name": "@dra2020/fsm",
-  "version": "1.2.1",
+  "version": "1.3.1",
   "description": "Library for managing execution of tree of finite state machines.",
   "main": "dist/fsm.js",
   "types": "./dist/all.d.ts",

@@ -142,38 +142,38 @@ exports.FSM_CUSTOM7 = 1 << 10;
 exports.FSM_CUSTOM8 = 1 << 11;
 exports.FSM_CUSTOM9 = 1 << 12;
 function FsmDone(s) {
-    return ((s & exports.FSM_DONE) != 0) || ((s & exports.FSM_ERROR) != 0) || ((s & exports.FSM_RELEASED) != 0);
+    return (s === exports.FSM_DONE || s === exports.FSM_ERROR || s === exports.FSM_RELEASED);
 }
 function FsmStateToString(state) {
     let a = [];
-    if (state == exports.FSM_STARTING)
+    if (state === exports.FSM_STARTING)
         return 'starting';
     else {
-        if (state & exports.FSM_PENDING)
+        if (state === exports.FSM_PENDING)
             a.push('pending');
-        if (state & exports.FSM_DONE)
+        if (state === exports.FSM_DONE)
             a.push('done');
-        if (state & exports.FSM_ERROR)
+        if (state === exports.FSM_ERROR)
             a.push('error');
-        if (state & exports.FSM_RELEASED)
+        if (state === exports.FSM_RELEASED)
             a.push('released');
-        if (state & exports.FSM_CUSTOM1)
+        if (state === exports.FSM_CUSTOM1)
             a.push('custom1');
-        if (state & exports.FSM_CUSTOM2)
+        if (state === exports.FSM_CUSTOM2)
             a.push('custom2');
-        if (state & exports.FSM_CUSTOM3)
+        if (state === exports.FSM_CUSTOM3)
             a.push('custom3');
-        if (state & exports.FSM_CUSTOM4)
+        if (state === exports.FSM_CUSTOM4)
             a.push('custom4');
-        if (state & exports.FSM_CUSTOM5)
+        if (state === exports.FSM_CUSTOM5)
             a.push('custom5');
-        if (state & exports.FSM_CUSTOM6)
+        if (state === exports.FSM_CUSTOM6)
             a.push('custom6');
-        if (state & exports.FSM_CUSTOM7)
+        if (state === exports.FSM_CUSTOM7)
             a.push('custom7');
-        if (state & exports.FSM_CUSTOM8)
+        if (state === exports.FSM_CUSTOM8)
             a.push('custom8');
-        if (state & exports.FSM_CUSTOM9)
+        if (state === exports.FSM_CUSTOM9)
             a.push('custom9');
         return a.join('|');
     }
@@ -236,7 +236,7 @@ class Fsm {
         return !this.done && this._waitOn == null;
     }
     get iserror() {
-        return (this.state & exports.FSM_ERROR) != 0;
+        return (this.state === exports.FSM_ERROR);
     }
     get isDependentError() {
         return this.dependentError;

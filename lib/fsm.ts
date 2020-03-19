@@ -19,30 +19,30 @@ export const FSM_CUSTOM9: number  = 1<<12;
 
 function FsmDone(s: number): boolean
 {
-  return ((s & FSM_DONE) != 0) || ((s & FSM_ERROR) != 0) || ((s & FSM_RELEASED) != 0);
+  return (s === FSM_DONE || s === FSM_ERROR || s === FSM_RELEASED);
 }
 
 function FsmStateToString(state: number): string
 {
   let a: string[] = [];
 
-  if (state == FSM_STARTING)
+  if (state === FSM_STARTING)
     return 'starting';
   else
   {
-    if (state & FSM_PENDING) a.push('pending');
-    if (state & FSM_DONE) a.push('done');
-    if (state & FSM_ERROR) a.push('error');
-    if (state & FSM_RELEASED) a.push('released');
-    if (state & FSM_CUSTOM1) a.push('custom1');
-    if (state & FSM_CUSTOM2) a.push('custom2');
-    if (state & FSM_CUSTOM3) a.push('custom3');
-    if (state & FSM_CUSTOM4) a.push('custom4');
-    if (state & FSM_CUSTOM5) a.push('custom5');
-    if (state & FSM_CUSTOM6) a.push('custom6');
-    if (state & FSM_CUSTOM7) a.push('custom7');
-    if (state & FSM_CUSTOM8) a.push('custom8');
-    if (state & FSM_CUSTOM9) a.push('custom9');
+    if (state === FSM_PENDING) a.push('pending');
+    if (state === FSM_DONE) a.push('done');
+    if (state === FSM_ERROR) a.push('error');
+    if (state === FSM_RELEASED) a.push('released');
+    if (state === FSM_CUSTOM1) a.push('custom1');
+    if (state === FSM_CUSTOM2) a.push('custom2');
+    if (state === FSM_CUSTOM3) a.push('custom3');
+    if (state === FSM_CUSTOM4) a.push('custom4');
+    if (state === FSM_CUSTOM5) a.push('custom5');
+    if (state === FSM_CUSTOM6) a.push('custom6');
+    if (state === FSM_CUSTOM7) a.push('custom7');
+    if (state === FSM_CUSTOM8) a.push('custom8');
+    if (state === FSM_CUSTOM9) a.push('custom9');
     return a.join('|');
   }
 }
@@ -148,7 +148,7 @@ export class Fsm
 
   get iserror(): boolean
     {
-      return (this.state & FSM_ERROR) != 0;
+      return (this.state === FSM_ERROR);
     }
 
   get isDependentError(): boolean
