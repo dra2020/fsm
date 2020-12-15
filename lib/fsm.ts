@@ -17,6 +17,9 @@ export const FSM_CUSTOM7: number  = 1<<10;
 export const FSM_CUSTOM8: number  = 1<<11;
 export const FSM_CUSTOM9: number  = 1<<12;
 
+// polyfill
+let doLater: any = global && global.setImmediate ? setImmediate : (cb: any) => { setTimeout(cb, 0) };
+
 function FsmDone(s: number): boolean
 {
   return (s === FSM_DONE || s === FSM_ERROR || s === FSM_RELEASED);
@@ -73,7 +76,7 @@ export class FsmManager
     if (! this.bTickSet)
     {
       this.bTickSet = true;
-      setImmediate(this.doTick);
+      doLater(this.doTick);
     }
   }
 

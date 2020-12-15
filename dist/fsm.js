@@ -61,6 +61,8 @@ exports.FSM_CUSTOM6 = 1 << 9;
 exports.FSM_CUSTOM7 = 1 << 10;
 exports.FSM_CUSTOM8 = 1 << 11;
 exports.FSM_CUSTOM9 = 1 << 12;
+// polyfill
+let doLater = global && global.setImmediate ? setImmediate : (cb) => { setTimeout(cb, 0); };
 function FsmDone(s) {
     return (s === exports.FSM_DONE || s === exports.FSM_ERROR || s === exports.FSM_RELEASED);
 }
@@ -111,7 +113,7 @@ class FsmManager {
         this.theTickList[fsm.id] = fsm;
         if (!this.bTickSet) {
             this.bTickSet = true;
-            setImmediate(this.doTick);
+            doLater(this.doTick);
         }
     }
     doTick() {
